@@ -1,0 +1,122 @@
+<?php
+
+require ('api/tripal_remote_job.api.inc');
+
+/**
+ * Implementation of hook_permissions().
+ */
+function tripal_remote_job_permission() {
+  return array (
+    'administer remote resources' => array (
+      'title' => t ( 'Administer Remote resources' ),
+      'description' => t ( 'Allows a user to configure which resources can be used for execution of remote jobs.' )
+    ),
+  );
+}
+/**
+ * Implementation of hook_menu().
+ */
+function tripal_remote_job_menu() {
+  $items = array();
+
+  /**
+   * Admin resources page.
+   *
+   * Manages computational resources.
+   */
+  $items['admin/tripal/extension/remote-resources'] = array(
+    'title' => 'Remote Computational Resources',
+    'description' => 'Remote Job Execution Configuration',
+    'page callback' => 'tripal_remote_job_admin_resources_page',
+    'access arguments' => array('administer remote resources'),
+    'file' => 'includes/admin/tripal_remote_job.admin.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/tripal/extension/remote-resources/edit/%'] = array(
+    'title' => 'Resources',
+    'description' => 'Update the configuration settings for an existing resource.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tripal_remote_job_admin_resource_form', 5),
+    'access arguments' => array('administer remote resources'),
+    'file' => 'includes/admin/tripal_remote_job.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+  $items['admin/tripal/extension/remote-resources/add'] = array(
+    'title' => 'Add a new computational resource',
+    'description' => 'Update the configuration settings for an existing resource.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tripal_remote_job_admin_resource_form'),
+    'access arguments' => array('administer remote resources'),
+    'file' => 'includes/admin/tripal_remote_job.admin.inc',
+    'type' => MENU_LOCAL_ACTION,
+  );
+  $items['admin/tripal/extension/remote-resources/delete'] = array(
+    'title' => 'Resources',
+    'description' => 'Update the configuration settings for an existing resource.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tripal_remote_job_admin_resource_delete_form'),
+    'access arguments' => array('administer remote resources'),
+    'file' => 'includes/admin/tripal_remote_job.admin.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+
+/**
+ * Implements hook_mail().
+ */
+function tripal_remote_job_mail($key, &$message, $params) {
+  $site_name = variable_get('site_name', "");
+  switch ($key) {
+    case 'job-complete':
+      $job     = $params['job'];
+      $user    = $params['user'];
+      $message['subject'] = t("Your $site_name job: " . $job->getJobName());
+      $message['body'][] = "Your job titled \"" . $job->getJobName() . "\", has completed.";
+      $message['body'][] = "Please return to $site_name site to view the results for this job.";
+      break;
+    case 'job-started':
+      $job  = $params['job'];
+      $user = $params['user'];
+      $message['subject'] = t("Your $site_name job has started: " . $job->getJobName());
+      $message['body'][] = "Your job titled \"" . $job->getJobName() . "\" " .
+      $message['body'][] = "You will receive an email once the job has completed.";
+      break;
+  }
+}
+
+/**
+ * The callback function used by the Tripal Job system for submitting a job.
+ *
+ * @param TripalJob $job
+ */
+function tripal_remote_job_run_job($command, $files = array(), $send_email = FALSE, TripalJob $job) {
+
+  $job_id = $job->getJobID();
+
+  module_load_include('inc', 'tripal_remote_job', 'includes/TripalRemoteScheduler');
+  module_load_include('inc', 'tripal_remote_job', 'includes/TripalRemoteJob');
+
+  // We want a TripalRemoteJob object to pass to the scheduler. This new
+  // TripalRemoteJob object will automatically have the command, files array
+  // and send_email set, so we don't need to do anything with those values
+  // passed in to this function.
+  $job = new TripalRemoteJob();
+  $job->load($job_id);
+
+  // Execute the job.
+  $scheduler = new TripalRemoteScheduler();
+  $scheduler->launchJob($job);
+
+  // Check the status of the job while it runs. When it's finished
+  // then clean things up.
+  $status = $scheduler->checkJobStatus($job);
+  while($status == 'running') {
+    $status = $scheduler->checkJobStatus($job);
+    sleep(60);
+  }
+  $scheduler->getResults($job);
+  $scheduler->cleanJob($job);
+}
