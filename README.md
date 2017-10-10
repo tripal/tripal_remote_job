@@ -27,12 +27,12 @@ Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1])
     Type:        Boolean
     Required:    Optional
        
-    Examples:
+ Examples:
     
-    tripal_add_remote_job("myCoolRemoteJob", "uptime >> coolLevel.txt", array("/local/Path/to/coolLevel.txt"), FALSE);
-    ^   Executes regular system command 'uptime' and appends its output to coolLevel.txt without notification via Email
+ tripal_add_remote_job("myCoolRemoteJob", "uptime >> coolLevel.txt", array("/local/Path/to/coolLevel.txt"), FALSE);
+ ^   Executes regular system command 'uptime' and appends its output to coolLevel.txt without notification via Email
     
-    tripal_add_remote_job("simpleUptime", "uptime");
-    ^   Executes regular system command 'uptime'. 
-        Its output will be returned within STDOUT.txt. No additional files were used and no email notification was sent.
+ tripal_add_remote_job("simpleUptime", "uptime");
+ ^   Executes regular system command 'uptime'. 
+     Its output will be returned within STDOUT.txt. No additional files were used and no email notification was sent.
        
