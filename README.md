@@ -2,11 +2,13 @@
 
 # Currently Working:
   - [x] SSH
-  - [x] PBS
-  - [x] SLURM
-  - [x] GridEngine
-  
-  Email Notification Status: Not supported
+  - [ ] PBS
+  - [ ] SLURM
+  - [ ] GridEngine
+  - [ ] Email Notification
+  - [ ] Allow user to specify SSH Key locations
+  - [ ] Toggle ability of user to prevent remote files from being deleted (Default: disabled, files will always be deleted)
+  - [ ] API argument to specify target destination for job if multiple (make some logic to dynamically asign?)
   
 # Requirements
 Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1]) 
