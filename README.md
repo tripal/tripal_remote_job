@@ -1,31 +1,31 @@
 #tripal-remote-job
 
-Currently Working:
-  SSH:        Yes
-  PBS:        No
-  SLURM:      No
-  GridEngine: No
+#Currently Working:
+  SSH:        [x]
+  PBS:        [ ]
+  SLURM:      [ ]
+  GridEngine: [ ]
   
   Email Notification Status: Not supported
   
-Requirements
-Tripal 3 (Tested with Tripal 3 v. 
+#Requirements
+Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1]) 
 
-1.) Install module as any other module
-2.) From Admin menu, visit 'Tripal > Extensions > Remote Computational Resources' to set up one or more remote servers
-3.) Have your module call tripal_add_remote_job() with following arguments:
-    1.)Argument:    Job Name
-       Type:        String
-       Required:    Yes
-    2.)Argument:    Command
-       Type:        String
-       Required:    Yes
-    3.)Argument:    Files
-       Type:        Array
-       Required:    Optional (Required if specifying Email Notification)
-    4.)Argument:    Email Notification
-       Type:        Boolean
-       Required:    Optional
+1. Install module as any other module
+2. From Admin menu, visit 'Tripal > Extensions > Remote Computational Resources' to set up one or more remote servers
+3. Have your module call tripal_add_remote_job() with following arguments:
+   -Argument:    Job Name
+    Type:        String
+    Required:    Yes
+   -Argument:    Command
+    Type:        String
+    Required:    Yes
+   -Argument:    Files
+    Type:        Array
+    Required:    Optional (Required if specifying Email Notification)
+   -Argument:    Email Notification
+    Type:        Boolean
+    Required:    Optional
        
     Examples:
     
