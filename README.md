@@ -1,6 +1,6 @@
 # tripal-remote-job
 
-# Currently Working:
+## Status
   - [x] SSH
   - [ ] PBS
   - [ ] SLURM
@@ -10,9 +10,9 @@
   - [ ] Toggle ability of user to prevent remote files from being deleted (Default: disabled, files will always be deleted)
   - [ ] API argument to specify target destination for job if multiple (make some logic to dynamically asign?)
   
-# Requirements
+## Requirements
 Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1]) 
-
+## Installation
 1. Install module as any other module
 2. From Admin menu, visit 'Tripal > Extensions > Remote Computational Resources' to set up one or more remote servers
 3. Have your module call tripal_add_remote_job() with following arguments:
