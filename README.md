@@ -1,6 +1,6 @@
-#tripal-remote-job
+# tripal-remote-job
 
-#Currently Working:
+# Currently Working:
   SSH:        [x]
   PBS:        [ ]
   SLURM:      [ ]
@@ -8,7 +8,7 @@
   
   Email Notification Status: Not supported
   
-#Requirements
+# Requirements
 Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1]) 
 
 1. Install module as any other module
