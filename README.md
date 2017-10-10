@@ -1,10 +1,10 @@
 # tripal-remote-job
 
 # Currently Working:
-  SSH:        [x]
-  PBS:        [ ]
-  SLURM:      [ ]
-  GridEngine: [ ]
+  - [x] SSH
+  - [x] PBS
+  - [x] SLURM
+  - [x] GridEngine
   
   Email Notification Status: Not supported
   
