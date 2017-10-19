@@ -31,6 +31,6 @@ function tripal_add_remote_job($job_name, $command, $files = array(), $send_emai
   
   $arguments = array($command, $files, $send_email);
 
-  tripal_add_job($job_name, 'tripal_remote_job', 'tripal_remote_job_run_job',
+  return tripal_add_job($job_name, 'tripal_remote_job', 'tripal_remote_job_run_job',
       $arguments, $user->uid);
 }
