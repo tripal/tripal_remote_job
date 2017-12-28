@@ -48,6 +48,6 @@ Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1])
      
 ## Remote Resource Requirements
 Refer to this section when configuring your remote resources
-### SSH / Stand-alone Computational resource
+#### SSH / Stand-alone Computational resource
   -Any commands to be called must either exist on the $PATH of the configured remote user or be passed along with the contents of the job
        
