@@ -4,11 +4,16 @@ Allows Tripal to run jobs on other machines or clusters
 Ported from GenSAS to work with Tripal
 
 ## Status
-  - [x] SSH
+  - [ ] SSH
+    - [x] Initiate Job
+    - [ ] Get status of job
+    - [x] Get results of job
   - [ ] PBS
   - [ ] SLURM
   - [ ] GridEngine
   - [ ] Email Notification
+    - [ ] Job initiated
+    - [ ] Job complete
   - [ ] Allow user to specify SSH Key locations
   - [ ] Toggle ability of user to prevent remote files from being deleted (Default: disabled, files will always be deleted)
   - [ ] API argument to specify target destination for job if multiple (make some logic to dynamically asign?)
