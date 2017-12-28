@@ -40,9 +40,14 @@ Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1])
  Examples:
     
  tripal_add_remote_job("myCoolRemoteJob", "uptime >> coolLevel.txt", array("/local/Path/to/coolLevel.txt"), FALSE);
- ^   Executes regular system command 'uptime' and appends its output to coolLevel.txt without notification via Email
+    Executes regular system command 'uptime' and appends its output to coolLevel.txt without notification via Email
     
  tripal_add_remote_job("simpleUptime", "uptime");
- ^   Executes regular system command 'uptime'. 
-     Its output will be returned within STDOUT.txt. No additional files were used and no email notification was sent.
+    Executes regular system command 'uptime'. 
+    Its output will be returned within STDOUT.txt. No additional files were used and no email notification was sent.
+     
+## Remote Resource Requirements
+Refer to this section when configuring your remote resources
+### SSH / Stand-alone Computational resource
+  -Any commands to be called must either exist on the $PATH of the configured remote user or be passed along with the contents of the job
        
