@@ -1,9 +1,0 @@
-name = Tripal Remote Job
-description = This module allows a Tripal site to execute commands on a remote server or cluster rather than on the local webserver.
-core = 7.x
-project = tripal_remote_job
-package = Tripal Extensions
-version = 7.x-1.0-beta
-configure = admin/tripal/extension/remote-resources
-
-dependencies[] = tripal
