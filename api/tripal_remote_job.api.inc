@@ -25,6 +25,8 @@
  * @param unknown $files
  *   A list of files that must be copied to the remote host prior to
  *   execution.
+ * @return
+ *  The Tripal Job ID number for the requested job
  */
 function tripal_add_remote_job($job_name, $command, $files = array(), $send_email = FALSE){
   global $user;
@@ -34,7 +36,17 @@ function tripal_add_remote_job($job_name, $command, $files = array(), $send_emai
   return tripal_add_job($job_name, 'tripal_remote_job', 'tripal_remote_job_run_job',
       $arguments, $user->uid);
 }
-
+/*
+ * @param $job_id
+ *  Tripal Job ID number
+ * 
+ * @return
+ *  An integer or string representing the specified job's status
+ * 
+ * @todo
+ *  Complete functionality
+ *  Define how the return value will be held (string, int, etc.)
+ */
 function check_job_progress($job_id)
 {
     $job = tripal_get_job($job_id);
@@ -43,11 +55,31 @@ function check_job_progress($job_id)
     echo $job_id." = ".$job;
     return $job;
 }
-
+/*
+ * Check to see if a file is readable by the site (webserver/php)
+ * @param $filesToCheck
+ *  An array of files to be checked on the remote system
+ * 
+ * @return
+ *  An array with matching $filesToCheck with 0 or 1 (for accessibility)
+ *  of the maching file (based on array index)
+ * 
+ * @todo
+ *  Run this check without spawning a Tripal Job (or else it may clutter
+ *  up the Tripal Job queue)
+ */
 function tripal_remote_check_files($filesToCheck)
 {
-    //Do we really want to spawn a whole job for this (will be run
-    //(Some modules might call this very often (for instance on page load) 
-    //which will fill up the queue)
-    return 'No check made';
+    
+    $accessible = array();
+    for ($k = 0; $k < count($filesToCheck);$k++)
+    {
+        if ($k % 2 == 0) {
+            $accessible[$k] = 0;
+        }
+        else
+            $accessible[$k] = 1;
+        
+    }
+    return $accessible;
 }
