@@ -1,4 +1,4 @@
-# tripal-remote-job
+# tripal_remote_job
 Allows Tripal to run jobs on other machines or clusters
 
 Ported from GenSAS to work with Tripal
