@@ -77,9 +77,9 @@ function tripal_remote_check_files($filesToCheck)
         if ($k % 2 == 0) {
             $accessible[$k] = 0;
         }
-        else
+        else {
             $accessible[$k] = 1;
-        
+        }
     }
     return $accessible;
 }
