@@ -44,7 +44,7 @@ function tripal_add_remote_job($job_name, $command, $files = array(), $send_emai
  *  An integer or string representing the specified job's status
  * 
  * @todo
- *  Complete functionality
+ *  Complete functionalitys
  *  Define how the return value will be held (string, int, etc.)
  */
 function check_job_progress($job_id)
