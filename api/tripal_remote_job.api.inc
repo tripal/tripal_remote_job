@@ -31,7 +31,7 @@
 function tripal_add_remote_job($job_name, $command, $files = array(), $send_email = FALSE){
   global $user;
   
-  $arguments = array($command, $files, $send_email);
+  $arguments = array($command." & echo $! > PID", $files, $send_email);
 
   return tripal_add_job($job_name, 'tripal_remote_job', 'tripal_remote_job_run_job',
       $arguments, $user->uid);
@@ -59,6 +59,8 @@ function check_job_progress($job_id)
  * Check to see if a file is readable by the site (webserver/php)
  * @param $filesToCheck
  *  An array of files to be checked on the remote system
+ * @param $resource_id
+ *  ID of the Tripal Remote Resource - use to determine which method to check
  * 
  * @return
  *  An array with matching $filesToCheck with 0 or 1 (for accessibility)
@@ -66,20 +68,74 @@ function check_job_progress($job_id)
  * 
  * @todo
  *  Run this check without spawning a Tripal Job (or else it may clutter
- *  up the Tripal Job queue)
+ *      up the Tripal Job queue)
+ *  Make this decide how to check based on resource type, then delegate to that
+ *      class (SSH for instance)
  */
-function tripal_remote_check_files($filesToCheck)
+function tripal_remote_check_files($filesToCheck, $resource_id)
 {
+    module_load_include('inc', 'tripal_remote_job', '/includes/TripalRemoteResource');
+    module_load_include('inc', 'tripal_remote_job', '/includes/TripalRemoteSSH');
     
-    $accessible = array();
-    for ($k = 0; $k < count($filesToCheck);$k++)
-    {
-        if ($k % 2 == 0) {
-            $accessible[$k] = 0;
-        }
-        else {
-            $accessible[$k] = 1;
-        }
+    if (!$resource_id) {
+        $sql = "SELECT resource_id FROM {tripal_remote_resource} where enabled='1' ORDER BY rank ASC LIMIT 1";
+        $sqlResult = db_query($sql);
+        $resource_id = $sqlResult->fetchField();
     }
+    
+    $res = TripalRemoteResource::getResource($resource_id);
+    if ($res) {
+      // Get the resource type.
+      $resource_type = $res->getType();
+    }
+    else {
+        return NULL;
+    }
+    
+    switch ($resource_type) {
+        case 'alone' :
+          $accessible = $res->checkFiles($filesToCheck);
+          break;
+    }
+            
     return $accessible;
+}
+
+
+/*
+ * Retrieve a TripalRemoteResource object item for viewing details.
+ * Does not initiate connection to the remote resource
+ * 
+ * @param $connection_ID
+ *  An integer ID belonging to an existing TRJ Connection
+ * 
+ * @return
+ *  Connection object, false on error.
+ * 
+ * @todo
+ *  Currently only will support SSH (TRJ only supports SSH)
+ *  Implement others (they all extend TripalRemoteResource)
+ */
+function tripal_remote_job_get_resource_details($resource_ID)
+{
+    module_load_include('inc', 'tripal_remote_job', '/includes/TripalRemoteResource');
+    module_load_include('inc', 'tripal_remote_job', '/includes/TripalRemoteSSH');
+    #$resource = TripalRemoteResource::byID($resource_ID);
+    
+    $resourceForType = TripalRemoteResource::byID($resource_ID);
+    
+    
+    
+    $resource = TripalRemoteResource::getResource($resource_ID);
+    
+    if ($resource->getType() == "alone") {
+        echo "Hostname: ".$resource->getHostname()."\n";
+        echo "Port: ".$resource->getSSHPort()."\n"; 
+        echo "Type: ".$resource->getType()."\n"; 
+    }
+    else {
+        "Resource specified is not an SSH/standalone server. Not sure how to proceed";
+    }
+    
+    
 }

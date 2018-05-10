@@ -59,6 +59,21 @@ class TripalRemoteSSH extends TripalRemoteResource {
     }
   }
 
+  public function checkFiles($filesToCheck)
+  {
+      $cmdA = "ssh -p $this->ssh_port $this->username@$this->hostname";
+      $results = array();
+      foreach ($filesToCheck as $files)
+      {   
+          $cmdB = "$cmdA [[ -r $files ]] && echo 1 || echo 0";
+          echo $cmdB;
+          exec($cmdB,$results);
+      }
+      /*foreach ($results as $key => $result) {
+          echo "$filesToCheck[$key] $result <br>";
+      } *///Debuggery
+      return $results;
+  }
   /**
    * Adds a new resource submit.
    *
@@ -193,6 +208,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
       echo "\n";
       
       $cmd = "$ssh_conn \"cat $remote_job_dir/PID\"";
+      echo "Results of cmd: ".$cmd;
       $output = array();
       $return_var = '';
       $remotePID = exec($cmd, $output, $return_var);
@@ -442,11 +458,6 @@ class TripalRemoteSSH extends TripalRemoteResource {
    */
   public function setUsername($username) {
     $this->username = $username;
-  }
-  
-  public function justsometest($notf)
-  {
-      return "yes it works".$notf;
   }
 
 }

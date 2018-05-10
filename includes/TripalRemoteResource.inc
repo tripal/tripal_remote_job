@@ -86,6 +86,8 @@ class TripalRemoteResource {
    * @param integer $resource_id
    *
    * @return TRJobResource|NULL
+   * 
+   * @todo The other Resource types 
    */
   public static function getResource($resource_id) {
     $resource = NULL;
