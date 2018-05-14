@@ -203,32 +203,37 @@ class TripalRemoteSSH extends TripalRemoteResource {
       $ssh_conn = "ssh -p $ssh_port -i $ssh_key_dir/id_rsa $username" . '@' . $hostname;
       
       $remote_job_dir = $this->getJobWorkingDir($job);
-      $remote_job_dir = $remote_job_dir;
+      
       echo "Checking for PID in remote file ".$remote_job_dir."/PID";
       echo "\n";
       
-      $cmd = "$ssh_conn \"cat $remote_job_dir/PID\"";
-      echo "Results of cmd: ".$cmd;
-      $output = array();
-      $return_var = '';
-      $remotePID = exec($cmd, $output, $return_var);
+      /*
+       * Get the Remote PID
+       */
+      $getPIDcmd = "$ssh_conn \"cat $remote_job_dir/PID\"";
+      $getPIDoutput = array();
+      $getPIDreturn = '';
+      exec($getPIDcmd, $getPIDoutput, $getPIDreturn);
       $remotePID = $output[0];
       
-      //Check if the PID is still active
+      /*
+       * Check if the PID is still active
+       */
+      $getStatusCmd = "$ssh_conn \"ps -p $remotePID\"";
+      $getStatusOutput = array();
+      $getStatusReturn = '';
+      exec($getStatusCmd, $getStatusOutput, $getStatusReturn);
       
-      $cmd = "$ssh_conn \"ps -p $remotePID\"";
-      $output = array();
-      $return_var = '';
-      $remotePID = exec($cmd, $output, $return_var);
+      /* Debug
+      echo "Line 1 of output: ".$getStatusOutput[0];
+      echo "\n";
+      echo "Line 2 of output: ".$getStatusOutput[1];
+      echo "\n";
+      echo "Length of line 2: ".strlen($getStatusOutput[1]);
+      echo "\n";
+      */
       
-      echo "Line 1 of output: ".$output[0];
-      echo "\n";
-      echo "Line 2 of output: ".$output[1];
-      echo "\n";
-      echo "Length of line 2: ".strlen($output[1]);
-      echo "\n";
-      
-      if (strlen($output[1]) == 0)
+      if (strlen($getStatusOutput[1]) == 0)
       {
           echo "PID no longer active, returning FALSE";
           echo "\n";
