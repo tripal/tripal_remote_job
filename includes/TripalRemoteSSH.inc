@@ -216,6 +216,8 @@ class TripalRemoteSSH extends TripalRemoteResource {
       exec($getPIDcmd, $getPIDoutput, $getPIDreturn);
       $remotePID = $getPIDoutput[0];
       
+      // Debug missing PID
+      echo 'Process ID foudn: '.$getPIDoutput[0];
       /*
        * Check if the PID is still active
        */
