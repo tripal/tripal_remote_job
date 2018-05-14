@@ -214,7 +214,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
       $getPIDoutput = array();
       $getPIDreturn = '';
       exec($getPIDcmd, $getPIDoutput, $getPIDreturn);
-      $remotePID = $output[0];
+      $remotePID = $getPIDoutput[0];
       
       /*
        * Check if the PID is still active
