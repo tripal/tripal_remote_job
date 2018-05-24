@@ -129,8 +129,15 @@ class TripalRemoteScheduler {
       $job->logMessage('Job is still running....\n');
       return 'running';
     }
-    $message='';$params=array();
-    tripal_remote_job_mail('job-complete', &$message, $params);
+    $message='';
+    $params=array();
+    //Get User's email address
+        $user_id = $resource.getUID();
+        $user = user_load($user_id);
+        $to = $user->mail;
+    $params['user'] = $user;
+    $params['job'] = $job;
+    drupal_mail('tripal_remote_job','job-complete',$params);
     $job->setProgress(100);
     return 'completed';    
   }
