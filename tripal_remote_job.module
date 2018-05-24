@@ -84,6 +84,10 @@ function tripal_remote_job_mail($key, &$message, $params) {
       $message['body'][] = "Your job titled \"" . $job->getJobName() . "\" " .
       $message['body'][] = "You will receive an email once the job has completed.";
       break;
+    case 'test':
+      $message['subject'] = t("This is a test");
+      $message['body'][] = "This has been a test.";
+      break;
   }
 }
 
