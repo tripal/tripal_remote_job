@@ -137,7 +137,7 @@ class TripalRemoteScheduler {
         $to = $user->mail;
     $params['user'] = $user;
     $params['job'] = $job;
-    drupal_mail('tripal_remote_job','job-complete',$params);
+    drupal_mail('tripal_remote_job','job-complete',$to,$params);
     $job->setProgress(100);
     return 'completed';    
   }
