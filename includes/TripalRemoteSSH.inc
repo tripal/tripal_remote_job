@@ -193,7 +193,13 @@ class TripalRemoteSSH extends TripalRemoteResource {
       $ssh_port = $this->getSSHPort();
       $username = $this->getUsername();
       $ssh_key_dir = '~/.ssh';
+      $ssh_key_dirOLD = variable_get('tripal_remote_job_ssh_key_dir', $_SERVER['HOME'] . ' /.ssh');
       
+      
+      
+      echo "\n\n\n";
+      echo "OLD key dir: ".$ssh_key_dirOLD;
+      echo "\n\n\n";
       //Get the remote PID of the job
       $job_id = $job->getJobID();
       echo "this job's ID: ". $job_id;

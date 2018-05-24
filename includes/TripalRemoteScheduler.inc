@@ -129,8 +129,10 @@ class TripalRemoteScheduler {
       $job->logMessage('Job is still running....\n');
       return 'running';
     }
-    return 'completed';
+    $message='';$params=array();
+    tripal_remote_job_mail('job-complete', &$message, $params);
     $job->setProgress(100);
+    return 'completed';    
   }
 
   /**
