@@ -118,8 +118,15 @@ function tripal_remote_job_run_job($command, $files = array(), $send_email = FAL
   $status = $scheduler->checkJobStatus($job);
   while($status == 'running') {
     $status = $scheduler->checkJobStatus($job);
-    sleep(60);
+    sleep(20);
   }
+  
+  // Did the user want to be notified?
+  // 
+  // If so, send out an email.
+  
+  drupal_mail("tripal_remote_job","test","sean.buehler@uconn.edu",array())
+  
   $scheduler->getResults($job);
   $scheduler->cleanJob($job);
 }
