@@ -172,7 +172,7 @@ class TripalRemoteScheduler {
     $key = 'job-started';
 
     // Specify 'to' and 'from' addresses.
-    $to = $user->getEmail();
+    $to = $user->mail;
     $from = variable_get('site_mail', 'admin@localhost.localdomain');
 
     // "params" loads in additional context for email content completion in
@@ -229,7 +229,7 @@ class TripalRemoteScheduler {
     $key = 'job-complete';
 
     // Specify 'to' and 'from' addresses.
-    $to = $user->getEmail();
+    $to = $user->mail;
     $from = variable_get('site_mail', 'admin@localhost.localdomain');
 
     // "params" loads in additional context for email content completion in
