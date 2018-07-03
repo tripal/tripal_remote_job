@@ -36,7 +36,7 @@ function tripal_remote_job_admin_resources_page() {
   // Get all resources.
   $resources = TripalRemoteResource::getResources();
 
-  $num_recs = 1;
+  $num_recs = 1; // 
   foreach ($resources as $resource) {
     $resource_id    = $resource->getResourceID();
     $resource_type  = $resource->getType();
@@ -175,7 +175,7 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
   $form['description'] = array(
     '#title'         => t('Resource Description'),
     '#type'          => 'textarea',
-    '#description'   => t("Provide a description about this resource."),
+    '#description'   => t("Provide a description for this resource."),
     '#default_value' => $resource->getDescription(),
     '#required'      => TRUE,
     '#rows'          => 2,
@@ -221,8 +221,12 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#title'         => t('Remote Working Directory'),
     '#type'          => 'textfield',
     '#default_value' => $resource->getWorkingDir(),
-    '#description'   => t("Please specify the path where the remote job will
-        perform it's work.  This directory should already exist on the remote machine."),
+    '#description'   => t("Specify the path where the remote job will
+        perform it's work.  The \"Test Remote Configuration\" button below will 
+        attempt to create this directory if it does not already exist on the 
+        remote machine (recommended). Within this directory, a 
+        <code>tripal_remote_job</code> directory will be created and individual 
+        jobs will each have their own directory here."),
   );
 
   // The connection section.
@@ -232,8 +236,15 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#collapsible'  => TRUE,
     '#title'        => 'Connection',
   );
+  if (!exec('whoami', $web_user))
+          $web_user[0] = 'unknown. For Apache, it is probably <code>apache</code> or <code>www-data</code>; for nginx, it is probably <code>nginx</code>.';
   $form['conn']['instructions'] = array(
-    '#markup' =>  '<p>' . t('') . '<p>',
+    '#markup' =>  '<p>' . t('Enter the connection details below. A connection to'
+            . ' the remote SSH server should already have been made at this point'
+            . ' in order to ensure connection details are correct and to avoid'
+            . ' man-in-the-middle attacks. The SSH key file should be within the'
+            . ' web-user\'s ~/.ssh directory. ') . '</p><p>' . t('Your web user '
+            . 'is ') . $web_user[0] ,
   );
   $hostname = $resource->getHostname();
   $form['conn']['hostname'] = array(
@@ -277,6 +288,14 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
       '#value' => t('Add Resource'),
     );
   }
+  
+  // Test Remote Configuration
+  $form['test_remote'] = array(
+    '#type' => 'submit',
+    '#name' => 'test_remote',
+    '#value' => t('Test Remote Configuration (Optional)')
+  );
+  
   $form['#prefix'] = '<div id="tripal-remote-job-admin-resource-form">';
   $form['#suffix'] = '</div>';
   return $form;
@@ -301,73 +320,129 @@ function tripal_remote_job_admin_resource_form_validate($form, &$form_state) {
  * @param $form_state
  */
 function tripal_remote_job_admin_resource_form_submit($form, &$form_state) {
-  module_load_include('inc', 'tripal_remote_job', 'includes/TripalRemoteResource');
-
-  $resource = $form_state['values']['resource'];
-
-  // Set properties of TripalRemoteResource.
-  $resource->setName(trim($form_state['values']['name']));
-  $resource->setDescription(trim($form_state['values']['description']));
-  $resource->setType(trim($form_state['values']['type']));
-  $resource->setRank(trim($form_state['values']['rank']));
-  $resource->setMaxSlots(trim($form_state['values']['max_slots']));
-  $resource->setWorkingDir(trim($form_state['values']['working_directory']));
-
-  if ($form_state['values']['enabled'] == 1) {
-    $resource->enable();
+  // Test Remote button was clicked, don't submit quite yet
+  if ($form_state['clicked_button']['#name'] == 'test_remote')
+  {
+      $form_state['rebuild'] = TRUE;
+      
+      // Gather the connection details from the form into an array
+      $connection_details = array();
+      $connection_details['remote_working_directory']   = $form_state['values']['working_directory'];
+      $connection_details['hostname']                   = $form_state['values']['conn']['hostname'];
+      $connection_details['ssh_port']                       = $form_state['values']['conn']['ssh_port'];
+      $connection_details['username']                   = $form_state['values']['conn']['username'];
+      // Call the tripal_remote_job_check_configuration function
+      /* Reminder of possible return values:
+       * 0 - Connection successful, remote working directory exists and is writeable    [directory_exists_is_writable]
+       * 1 - Connection successful, remote working directory exists but is not writable [directory_exists_not_writable]
+       * 2 - Connection successful, remote working directory did not exist, created     [directory_created]
+       * 3 - Connection successful, remote working directory could not be created       [directory_failed]
+       * 4 - Connection unsuccessful
+       * 5 - Something went wrong prior to connection
+       */
+      
+      $remote_status = tripal_remote_job_check_configuration($connection_details);
+      switch ($remote_status)
+      {
+          case 0:
+              drupal_set_message("Connection successful.");
+              drupal_set_message("The remote working directory exists and is writable.");
+              break;
+          case 1:
+              drupal_set_message("Connection successful.");
+              drupal_set_message("The remote working directory exists but is not writable.", 'warning');
+              break;
+          case 2:
+              drupal_set_message("Connection successful.");
+              drupal_set_message("The remote working directory did not exist - it has beeen created");
+              break;
+          case 3:
+              drupal_set_message("Connection successful.");
+              drupal_set_message("The remote working directory could not be created", 'error');
+              break;
+          case 4:
+              // @todo - Make this more informative - which details are invalid?
+              //         This may be handled in the hook_validate section
+              drupal_set_message("Connection details are invalid, please review them", 'error');
+              break;
+          case 5:
+              // Catch-all for other issues 
+              drupal_set_message("Something went wrong prior to connection", 'error');
+      }
+      
+      
   }
-  else {
-    $resource->disable();
-  }
+  // Normal submit button pressed, initiate submission
+  else
+  {
+    module_load_include('inc', 'tripal_remote_job', 'includes/TripalRemoteResource');
 
-  // Updates TripalRemoteResource.
-  if ($form_state['clicked_button']['#name'] == "update") {
-    if ($resource->update()) {
-      drupal_set_message('Resource succesfully updated.', 'status');
+    $resource = $form_state['values']['resource'];
+
+    // Set properties of TripalRemoteResource.
+    $resource->setName(trim($form_state['values']['name']));
+    $resource->setDescription(trim($form_state['values']['description']));
+    $resource->setType(trim($form_state['values']['type']));
+    $resource->setRank(trim($form_state['values']['rank']));
+    $resource->setMaxSlots(trim($form_state['values']['max_slots']));
+    $resource->setWorkingDir(trim($form_state['values']['working_directory']));
+
+    if ($form_state['values']['enabled'] == 1) {
+      $resource->enable();
     }
     else {
-      drupal_set_message('Resource could not be updated.', 'error');
+      $resource->disable();
     }
-  }
 
-  // Adds TripalRemoteResource.
-  else if ($form_state['clicked_button']['#name'] == "insert") {
-    if ($resource->insert()) {
-      drupal_set_message('Resource succesfully added.', 'status');
+    // Updates TripalRemoteResource.
+    if ($form_state['clicked_button']['#name'] == "update") {
+      if ($resource->update()) {
+        drupal_set_message('Resource succesfully updated.', 'status');
+      }
+      else {
+        drupal_set_message('Resource could not be updated.', 'error');
+      }
     }
+
+    // Adds TripalRemoteResource.
+    else if ($form_state['clicked_button']['#name'] == "insert") {
+      if ($resource->insert()) {
+        drupal_set_message('Resource succesfully added.', 'status');
+      }
+      else {
+        drupal_set_message('Resource could not be added.', 'error');
+      }
+    }
+
+    // Update resource ID.
+    $resource_id = $resource->getResourceID();
+
+    // Adds or Updates remote connection information.
+    $hostname = trim($form_state['values']['conn']['hostname']);
+    $ssh_port = trim($form_state['values']['conn']['ssh_port']);
+    $username = trim($form_state['values']['conn']['username']);
+
+    // Updates TripalRemoteSSH.
+    $remote_resource = TripalRemoteSSH::byID($resource_id);
+    if ($remote_resource) {
+      $remote_resource->setHostname($hostname);
+      $remote_resource->setSSHPort($ssh_port);
+      $remote_resource->setUsername($username);
+      $remote_resource->update();
+    }
+    // Adds TripalRemoteSSH.
     else {
-      drupal_set_message('Resource could not be added.', 'error');
+      $remote_resource = new TripalRemoteSSH(array(
+        'resource_id' => $resource->getResourceID(),
+        'hostname'    => $hostname,
+        'ssh_port'    => $ssh_port,
+        'username'    => $username,
+      ));
+      $remote_resource->insert();
     }
+
+    $form_state['redirect'] = 'admin/tripal/extension/remote-resources';
   }
-
-  // Update resource ID.
-  $resource_id = $resource->getResourceID();
-
-  // Adds or Updates remote connection information.
-  $hostname = trim($form_state['values']['conn']['hostname']);
-  $ssh_port = trim($form_state['values']['conn']['ssh_port']);
-  $username = trim($form_state['values']['conn']['username']);
-
-  // Updates TripalRemoteSSH.
-  $remote_resource = TripalRemoteSSH::byID($resource_id);
-  if ($remote_resource) {
-    $remote_resource->setHostname($hostname);
-    $remote_resource->setSSHPort($ssh_port);
-    $remote_resource->setUsername($username);
-    $remote_resource->update();
-  }
-  // Adds TripalRemoteSSH.
-  else {
-    $remote_resource = new TripalRemoteSSH(array(
-      'resource_id' => $resource->getResourceID(),
-      'hostname'    => $hostname,
-      'ssh_port'    => $ssh_port,
-      'username'    => $username,
-    ));
-    $remote_resource->insert();
-  }
-
-  $form_state['redirect'] = 'admin/tripal/extension/remote-resources';
 }
 
 /**

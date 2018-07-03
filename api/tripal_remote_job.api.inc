@@ -139,3 +139,72 @@ function tripal_remote_job_get_resource_details($resource_ID)
     
     
 }
+
+
+/*
+ * Check whether form data in the add/edit remote resource page is correct
+ * The connection details are passed to the function directly because these
+ * values may not exist in the database yet (user will either have not submitted
+ * them yet or have altered values in the form).
+ * 
+ * @param $connection_details
+ *  Array containing information about the server:
+ *      hostname
+ *      port
+ *      username
+ *      remote working directory
+ * 
+ * @return
+ *  connection status, possible conditions:
+ * 0 - Connection successful, remote working directory exists and is writeable    [directory_exists_is_writable]
+ * 1 - Connection successful, remote working directory exists but is not writable [directory_exists_not_writable]
+ * 2 - Connection successful, remote working directory did not exist, created     [directory_created]
+ * 3 - Connection successful, remote working directory could not be created       [directory_failed]
+ * 4 - Connection unsuccessful
+ * 5 - Something went wrong prior to connection
+ *      
+ * @todo
+ *  Currently only supports SSH configurations
+ *  Implement other 
+ *  SSH-specific: make compatible with other shells as needed (with functionality
+ *                to detect the available remote shell)
+ */
+function tripal_remote_job_check_configuration($connection_details)
+{
+    // Generate the command to test the connection.
+    $rwd = $connection_details['remote_working_directory'];
+    $cmd = 'ssh -p '.$connection_details['ssh_port'].' -i /.ssh/id_rsa '.$connection_details['username'].'@'.$connection_details['hostname'].' \' if [ -e '.$rwd.' ]; then if [ -w '.$rwd.' ]; then echo "directory_exists_is_writable"; else echo "directory_exists_not_writable"; fi else mkdir -p '.$rwd.'; if [ $? -eq  0 ]; then echo "directory_created"; else echo "directory_failed"; fi fi \'';
+    
+    //drupal_set_message($cmd);
+    exec($cmd, $results, $return_var);
+    //dpm($results[0]);
+    //dpm($return_var);
+    
+    $status_code = 5;
+    // $return_var will be non-zero if there was an error with the connection
+    if ($return_var)
+    {
+        $status_code = 4;
+    }
+    // Otherwise, see how the server configuration went after connecting
+    else
+    {
+        switch ($results[0])
+      {
+          case "directory_exists_is_writable":
+              $status_code = 0;
+              break;
+          case "directory_exists_not_writable":
+              $status_code = 1;
+              break;
+          case "directory_created":
+              $status_code = 2;
+              break;
+          case "directory_failed":
+              $status_code = 3;
+              break;          
+      }
+    }
+    
+    return $status_code;
+}
