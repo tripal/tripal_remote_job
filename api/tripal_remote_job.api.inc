@@ -173,7 +173,7 @@ function tripal_remote_job_check_configuration($connection_details)
 {
     // Generate the command to test the connection.
     $rwd = $connection_details['remote_working_directory'];
-    $cmd = 'ssh -p '.$connection_details['ssh_port'].' -i /.ssh/id_rsa '.$connection_details['username'].'@'.$connection_details['hostname'].' \' if [ -e '.$rwd.' ]; then if [ -w '.$rwd.' ]; then echo "directory_exists_is_writable"; else echo "directory_exists_not_writable"; fi else mkdir -p '.$rwd.'; if [ $? -eq  0 ]; then echo "directory_created"; else echo "directory_failed"; fi fi \'';
+    $cmd = 'ssh -p '.$connection_details['ssh_port'].' -i ~/.ssh/id_rsa '.$connection_details['username'].'@'.$connection_details['hostname'].' \' if [ -e '.$rwd.' ]; then if [ -w '.$rwd.' ]; then echo "directory_exists_is_writable"; else echo "directory_exists_not_writable"; fi else mkdir -p '.$rwd.'; if [ $? -eq  0 ]; then echo "directory_created"; else echo "directory_failed"; fi fi \'';
     
     drupal_set_message($cmd);
     exec($cmd, $results, $return_var);
