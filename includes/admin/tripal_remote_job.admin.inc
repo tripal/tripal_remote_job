@@ -237,15 +237,29 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#title'        => 'Connection',
   );
   if (!exec('whoami', $web_user))
-          $web_user[0] = 'unknown. For Apache, it is probably <code>apache</code> or <code>www-data</code>; for nginx, it is probably <code>nginx</code>.';
+        $web_user[0] = 'unknown. For Apache, it is probably <code>apache</code> or <code>www-data</code>; for nginx, it is probably <code>nginx</code>.';
+  if (!exec('echo $HOME', $web_home)) {
+          $web_home[0] = 'unknown.';
+  }
+  else {
+      $web_home[0] = $web_home[0].'/.ssh';
+  }
   $form['conn']['instructions'] = array(
     '#markup' =>  '<p>' . t('Enter the connection details below. A connection to'
-            . ' the remote SSH server should already have been made at this point'
+            . ' the remote SSH server should be made prior to this point'
             . ' in order to ensure connection details are correct and to avoid'
             . ' man-in-the-middle attacks. The SSH key file should be within the'
-            . ' web-user\'s ~/.ssh directory. ') . '</p><p>' . t('Your web user '
-            . 'is ') . $web_user[0] ,
+            . ' web-user\'s ~/.ssh directory. ') . '</p><p>' . t('For reference, your web user '
+            . 'is <code>') . $web_user[0] . t('</code> and its SSH directory is <code>') . $web_home[0] . t('</code>') ,
   );
+  
+  // Test Remote Configuration
+  $form['create_ssh'] = array(
+    '#type' => 'submit',
+    '#name' => 'create_ssh',
+    '#value' => t('Do this for me')
+  );
+  
   $hostname = $resource->getHostname();
   $form['conn']['hostname'] = array(
     '#title'         => t('Hostname'),
@@ -371,6 +385,13 @@ function tripal_remote_job_admin_resource_form_submit($form, &$form_state) {
       }
       
       
+  }
+  else if ($form_state['clicked_button']['#name'] == 'create_ssh')
+  {
+      $form_state['rebuild'] = TRUE;
+      
+      exec('[ -f ~/test ] || mkdir test');
+      exec('[ -f ~/test/thing.txt || touch ~/test/thing.txt');
   }
   // Normal submit button pressed, initiate submission
   else
