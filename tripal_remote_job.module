@@ -87,6 +87,7 @@ function tripal_remote_job_mail($key, &$message, $params) {
     case 'test':
       $message['subject'] = t("This is a test");
       $message['body'][] = "This has been a Tripal Remote Job test.";
+      $message['body'][] = "Origin module: ".$params['origin_module'];
       break;
   }
 }

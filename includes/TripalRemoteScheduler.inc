@@ -204,6 +204,7 @@ class TripalRemoteScheduler {
     $params = array(
         'job'     => $job,
         'user'    => $user,
+        'origin_module' => $origin_module,
     );
 
      /*The language of the e-mail. This will one of three values:
