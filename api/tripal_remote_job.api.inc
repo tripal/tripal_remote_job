@@ -28,12 +28,21 @@
  * @return
  *  The Tripal Job ID number for the requested job
  */
-function tripal_add_remote_job($job_name, $command, $files = array(), $send_email = FALSE){
+function tripal_add_remote_job($job_name, $command, $origin_module, $files = array(), $send_email = FALSE){
   global $user;
   
   $arguments = array($command." & echo $! > PID", $files, $send_email);
+  
+  if ($origin_module)
+  {
+      $module = $origin_module;              
+  }
+  else
+  {
+      $module = 'tripal_remote_job';
+  }
 
-  return tripal_add_job($job_name, 'tripal_remote_job', 'tripal_remote_job_run_job',
+  return tripal_add_job($job_name, $module, 'tripal_remote_job_run_job',
       $arguments, $user->uid);
 }
 /*
