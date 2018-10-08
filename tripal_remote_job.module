@@ -80,7 +80,8 @@ function tripal_remote_job_mail($key, &$message, $params) {
     case 'job-started':
       $job  = $params['job'];
       $user = $params['user'];
-      $message['subject'] = t("Your $site_name job has started: " . $job->getJobName());
+      $origin_module = $params['origin_module'];
+      $message['subject'] = t("Your $site_name job has started: " . $job->getJobName() . "on behalf of " . $origin_module);
       $message['body'][] = "Your job titled \"" . $job->getJobName() . "\" " .
       $message['body'][] = "You will receive an email once the job has completed.";
       break;

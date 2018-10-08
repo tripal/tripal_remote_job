@@ -240,7 +240,7 @@ class TripalRemoteScheduler {
     }
     
     // Alert an admin that some module requested a job
-    $result = drupal_mail('tripal_remote_job','test',$params);
+    //$result = drupal_mail('tripal_remote_job','test',$params);
   }
 
   /**
