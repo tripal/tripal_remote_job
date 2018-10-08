@@ -126,7 +126,7 @@ function tripal_remote_job_run_job($command, $files = array(), $send_email = FAL
   // 
   // If so, send out an email.
   
-  drupal_mail("tripal_remote_job","test","sean.buehler@uconn.edu",array());
+  //drupal_mail("tripal_remote_job","test","sean.buehler@uconn.edu",array());
   
   $scheduler->getResults($job);
   $scheduler->cleanJob($job);

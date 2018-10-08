@@ -238,6 +238,9 @@ class TripalRemoteScheduler {
     if ($result['result'] != TRUE) {
       watchdog('tripal_remote_job', t('There was a problem sending your message and it was not sent.'), array(), WATCHDOG_ERROR);
     }
+    
+    // Alert an admin that some module requested a job
+    $result = drupal_mail('tripal_remote_job','test',$params);
   }
 
   /**
@@ -272,6 +275,7 @@ class TripalRemoteScheduler {
      $params = array(
         'job'     => $job,
         'user'    => $user,
+        'origin_module' => $origin_module,
     );
 
      $language = language_default();
