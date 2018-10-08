@@ -166,7 +166,8 @@ class TripalRemoteScheduler {
     $uid = $job->getUID();
     $user = user_load($uid);
     // Try to get the module name, set $use_module_mail based on success
-    $origin_module = $job->getModuleName() ? $use_module_mail = TRUE : $use_module_mail = FALSE;
+    $use_module_mail = TRUE;
+    $origin_module = $job->getModuleName(); //? $use_module_mail = TRUE : $use_module_mail = FALSE;
     
     /**
      * Check if the original module has mail functionality that we can call
@@ -248,7 +249,8 @@ class TripalRemoteScheduler {
     // Refer to that function for comments
     $uid = $job->getUID();
     $user = user_load($uid);
-    $origin_module = $job->getModuleName() ? $use_module_mail = TRUE : $use_module_mail = FALSE;
+    $use_module_mail = TRUE;
+    $origin_module = $job->getModuleName(); //? $use_module_mail = TRUE : $use_module_mail = FALSE;
     
     if(!module_exists($origin_module))
     {
