@@ -165,47 +165,73 @@ class TripalRemoteScheduler {
     // Get the user for this job.
     $uid = $job->getUID();
     $user = user_load($uid);
-
-    // All system mails need to specify the module and template key (mirrored from
-    // hook_mail()) that the message they want to send comes from.
-    $module = 'tripal_remote_job';
+    // Try to get the module name, set $use_module_mail based on success
+    $origin_module = $job->getModuleName() ? $use_module_mail = TRUE : $use_module_mail = FALSE;
+    
+    /**
+     * Check if the original module has mail functionality that we can call
+     */    
+    // Does the module still exist (most likely but you never know)
+    if(!module_exists($origin_module))
+    {
+        $use_module_mail = FALSE;
+    }
+    $custom_mail_function = $origin_module.'_mail';
+    
+    // Does the module have a mail function?
+    if(!function_exists($custom_mail_function))
+    {
+        $use_module_mail = FALSE;
+    }
+    
+    /*
+     * Prepare the drupal_mail parameters
+     */
+    
+    // Use the specified module or fallback to Tripal Remote Job
+    $use_module_mail ? $module = $origin_module : $module = 'tripal_remote_job';
     $key = 'job-started';
-
+    
     // Specify 'to' and 'from' addresses.
     $to = $user->mail;
     $from = variable_get('site_mail', 'admin@localhost.localdomain');
 
-    // "params" loads in additional context for email content completion in
-    // hook_mail(). In this case, we want to pass in the values the user entered
-    // into the form, which include the message body in $form_values['message'].
+     /*"params" loads in additional context for email content completion in
+     hook_mail(). In this case, we want to pass in the values the user entered
+     into the form, which include the message body in $form_values['message'].
+      */
     $params = array(
-      'job'     => $job,
-      'user'    => $user
+        'job'     => $job,
+        'user'    => $user,
     );
 
-    // The language of the e-mail. This will one of three values:
-    // * user_preferred_language(): Used for sending mail to a particular website
-    //   user, so that the mail appears in their preferred language.
-    // * global $language: Used when sending a mail back to the user currently
-    //   viewing the site. This will send it in the language they're currently
-    //   using.
-    // * language_default(): Used when sending mail to a pre-existing, 'neutral'
-    //   address, such as the system e-mail address, or when you're unsure of the
-    //   language preferences of the intended recipient.
-    //
-    // Since in our case, we are sending a message to a random e-mail address that
-    // is not necessarily tied to a user account, we will use the site's default
-    // language.
+     /*The language of the e-mail. This will one of three values:
+     * user_preferred_language(): Used for sending mail to a particular website
+       user, so that the mail appears in their preferred language.
+     * global $language: Used when sending a mail back to the user currently
+       viewing the site. This will send it in the language they're currently
+       using.
+     * language_default(): Used when sending mail to a pre-existing, 'neutral'
+       address, such as the system e-mail address, or when you're unsure of the
+       language preferences of the intended recipient.
+    
+     Since in our case, we are sending a message to a random e-mail address that
+     is not necessarily tied to a user account, we will use the site's default
+     language.
+      * 
+      */
     $language = language_default();
 
-    // Whether or not to automatically send the mail when drupal_mail() is
-    // called. This defaults to TRUE, and is normally what you want unless you
-    // need to do additional processing before drupal_mail_send() is called.
+     /*Whether or not to automatically send the mail when drupal_mail() is
+     called. This defaults to TRUE, and is normally what you want unless you
+     need to do additional processing before drupal_mail_send() is called.
+      */
     $send = TRUE;
 
-    // Send the mail, and check for success. Note that this does not guarantee
-    // message delivery; only that there were no PHP-related issues encountered
-    // while sending.
+     /*Send the mail, and check for success. Note that this does not guarantee
+     message delivery; only that there were no PHP-related issues encountered
+     while sending.
+      */
     $result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
     if ($result['result'] != TRUE) {
       watchdog('tripal_remote_job', t('There was a problem sending your message and it was not sent.'), array(), WATCHDOG_ERROR);
@@ -218,52 +244,38 @@ class TripalRemoteScheduler {
    * @param TripalRemoteJob $job
    */
   protected function sendCompleteEmail(TripalRemoteJob $job) {
-
-    // Get the user for this job.
+    // Exactly the same as sendStartEmail, except $key is indication of job status
+    // Refer to that function for comments
     $uid = $job->getUID();
     $user = user_load($uid);
-
-    // All system mails need to specify the module and template key (mirrored from
-    // hook_mail()) that the message they want to send comes from.
-    $module = 'tripal_remote_job';
+    $origin_module = $job->getModuleName() ? $use_module_mail = TRUE : $use_module_mail = FALSE;
+    
+    if(!module_exists($origin_module))
+    {
+        $use_module_mail = FALSE;
+    }
+    $custom_mail_function = $origin_module.'_mail';
+    if(!function_exists($custom_mail_function))
+    {
+        $use_module_mail = FALSE;
+    }
+    
+    $use_module_mail ? $module = $origin_module : $module = 'tripal_remote_job';
     $key = 'job-complete';
-
-    // Specify 'to' and 'from' addresses.
+    
     $to = $user->mail;
     $from = variable_get('site_mail', 'admin@localhost.localdomain');
 
-    // "params" loads in additional context for email content completion in
-    // hook_mail(). In this case, we want to pass in the values the user entered
-    // into the form, which include the message body in $form_values['message'].
-    $params = array(
-      'job'     => $job,
-      'user'    => $user,
+     $params = array(
+        'job'     => $job,
+        'user'    => $user,
     );
 
-    // The language of the e-mail. This will one of three values:
-    // * user_preferred_language(): Used for sending mail to a particular website
-    //   user, so that the mail appears in their preferred language.
-    // * global $language: Used when sending a mail back to the user currently
-    //   viewing the site. This will send it in the language they're currently
-    //   using.
-    // * language_default(): Used when sending mail to a pre-existing, 'neutral'
-    //   address, such as the system e-mail address, or when you're unsure of the
-    //   language preferences of the intended recipient.
-    //
-    // Since in our case, we are sending a message to a random e-mail address that
-    // is not necessarily tied to a user account, we will use the site's default
-    // language.
-    $language = language_default();
+     $language = language_default();
 
-    // Whether or not to automatically send the mail when drupal_mail() is
-    // called. This defaults to TRUE, and is normally what you want unless you
-    // need to do additional processing before drupal_mail_send() is called.
-    $send = TRUE;
+     $send = TRUE;
 
-    // Send the mail, and check for success. Note that this does not guarantee
-    // message delivery; only that there were no PHP-related issues encountered
-    // while sending.
-    $result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
+     $result = drupal_mail($module, $key, $to, $language, $params, $from, $send);
     if ($result['result'] != TRUE) {
       watchdog('tripal_remote_job', t('There was a problem sending your message and it was not sent.'), array(), WATCHDOG_ERROR);
     }
