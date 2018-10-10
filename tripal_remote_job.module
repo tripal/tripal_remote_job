@@ -131,4 +131,7 @@ function tripal_remote_job_run_job($command, $files = array(), $send_email = FAL
   
   $scheduler->getResults($job);
   $scheduler->cleanJob($job);
+  
+  $scheduler->notifyModule($job);
+    
 }

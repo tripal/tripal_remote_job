@@ -131,31 +131,7 @@ class TripalRemoteScheduler {
       return 'running';
     }
     $job->setProgress(100);
-    /**
-     * Check if the original module has notify functionality that we can call
-     */    
-    // Does the module still exist (most likely but you never know)
-    $origin_module = $job->getModuleName();
-    $job_id = $job->getJobID();
-    $notify_module = TRUE;
-    if(!module_exists($origin_module))
-    {
-        $notify_module = FALSE;
-    }
-    $notify_function = $origin_module.'_trj_notify';
     
-    // Does the module have a mail function?
-    if(!function_exists($notify_function))
-    {
-        $notify_module = FALSE;
-    }
-    if($notify_module)
-    {
-        echo "--__--__--    attempting to notify the original module about completion";
-        echo "Trying to call " . $notify_function;
-        echo "";
-        $notify_function($job_id,'completed');
-    }
     return 'completed';    
   }
 
@@ -336,4 +312,34 @@ class TripalRemoteScheduler {
     }
     return FALSE;
   }
+
+
+    public function notifyModule(TripalRemoteJob $job)
+    {
+        /**
+         * Check if the original module has notify functionality that we can call
+         */    
+        // Does the module still exist (most likely but you never know)
+        $origin_module = $job->getModuleName();
+        $job_id = $job->getJobID();
+        $notify_module = TRUE;
+        if(!module_exists($origin_module))
+        {
+            $notify_module = FALSE;
+        }
+        $notify_function = $origin_module.'_trj_notify';
+
+        // Does the module have a mail function?
+        if(!function_exists($notify_function))
+        {
+            $notify_module = FALSE;
+        }
+        if($notify_module)
+        {
+            echo "Attempting to notify the original module about completion\n";
+            echo "Trying to call " . $notify_function ."\n";
+            echo "";
+            $notify_function($job_id,'completed');
+        }
+    }
 }
