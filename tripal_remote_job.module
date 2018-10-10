@@ -130,8 +130,6 @@ function tripal_remote_job_run_job($command, $files = array(), $send_email = FAL
   //drupal_mail("tripal_remote_job","test","sean.buehler@uconn.edu",array());
   
   $scheduler->getResults($job);
-  $scheduler->cleanJob($job);
-  
-  $scheduler->notifyModule($job);
-    
+  $scheduler->notifyModule($job);   //Let the module know that the job is done
+  $scheduler->cleanJob($job);       //includes sending the email, if applicable  
 }
