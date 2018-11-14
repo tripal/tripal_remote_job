@@ -99,6 +99,11 @@ function tripal_remote_job_add_tripal_remote_ssh_table(&$schema) {
         'length' => '200',
         'not null' => TRUE,
       ),
+      'ssh_key_location' => array(
+        'type' => 'varchar',
+        'length' => '200',
+        'not null' => TRUE,
+      ),
     ),
     'indexes' => array(
       'idx_trj_ssh_resource_id' => array('resource_id'),
@@ -157,4 +162,28 @@ function tripal_remote_job_add_tripal_remote_job_table(&$schema) {
       ),
     ),
   );
+}
+
+/**
+ *  Add SSH Key Location to the tripal_remote_ssh table
+ */
+function tripal_remote_job_update_7002()
+{
+    // Add ssh_key_location field (set 'not null' to FALSE for now)
+    db_add_field(
+        'tripal_remote_ssh',
+        'ssh_key_location',
+        array(
+            'descripton'    => 'Full file path for SSH key (including the file)',
+            'type'          => 'varchar',
+            'length'        => 200,
+            'not null'      => FALSE,
+        )
+    );
+    
+    // Populate ssh_key_location with default value (~/.ssh/id_rsa)
+    db_update('tripal_remote_ssh')
+            ->fields(array('ssh_key_location' => '~/.ssh/id_rsa'))
+            ->condition('ssh_key_location', NULL)
+            ->execute();
 }
