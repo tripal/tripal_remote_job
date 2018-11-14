@@ -159,7 +159,7 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#description'   => t("Please provide a name that describes this resource."),
     '#default_value' => $resource->getName(),
     '#required'      => TRUE,
-  );;
+  );
   $form['type'] = array(
     '#title'    => t('Resource Type'),
     '#type'     => 'select',
@@ -211,7 +211,7 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#type'          => 'checkbox',
     '#default_value' => $resource->isEnabled(),
     '#description'   => t("Check if this resource should be available by
-        default to all users?  If not users will be able
+        default to all users.  If not users will be able
         to find the resource in a list but it will not show by
         default for selection."),
   );
@@ -222,9 +222,7 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#type'          => 'textfield',
     '#default_value' => $resource->getWorkingDir(),
     '#description'   => t("Specify the path where the remote job will
-        perform it's work.  The \"Test Remote Configuration\" button below will 
-        attempt to create this directory if it does not already exist on the 
-        remote machine (recommended). Within this directory, a 
+        perform it's work.  Within this directory, a 
         <code>tripal_remote_job</code> directory will be created and individual 
         jobs will each have their own directory here."),
   );
@@ -237,28 +235,32 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#title'        => 'Connection',
   );
   if (!exec('whoami', $web_user))
+  {
         $web_user[0] = 'unknown. For Apache, it is probably <code>apache</code> or <code>www-data</code>; for nginx, it is probably <code>nginx</code>.';
-  if (!exec('echo $HOME', $web_home)) {
+  }
+  if (!exec('echo $HOME', $web_home))
+  {
           $web_home[0] = 'unknown.';
   }
-  else {
+  else
+  {
       $web_home[0] = $web_home[0].'/.ssh';
   }
   $form['conn']['instructions'] = array(
-    '#markup' =>  '<p>' . t('Enter the connection details below. A connection to'
-            . ' the remote SSH server should be made prior to this point'
-            . ' in order to ensure connection details are correct and to avoid'
-            . ' man-in-the-middle attacks. The SSH key file should be within the'
-            . ' web-user\'s ~/.ssh directory. ') . '</p><p>' . t('For reference, your web user '
-            . 'is <code>') . $web_user[0] . t('</code> and its SSH directory is <code>') . $web_home[0] . t('</code>') ,
+    //'#markup' => '<p> Enter the connection details below. A connection to the remote SSH server should be made prior to this point in order to ensure connection details are correct and to avoid main-in-the-middle attacks. </p><p> For reference, your web user is <code>' . $web_user[0] . '</code> and its SSH directory is <code>' . $web_home[0] . '</code>', 
+    '#markup' => '<p> Enter the connection details below. A connection to the remote SSH server should be made prior to this point in order to ensure connection details are correct and to avoid main-in-the-middle attacks.',        
+            
   );
   
   // Test Remote Configuration
+  /* disable this form element until the functionality actually exists
   $form['create_ssh'] = array(
     '#type' => 'submit',
     '#name' => 'create_ssh',
     '#value' => t('Do this for me')
   );
+   * 
+   */
   
   $hostname = $resource->getHostname();
   $form['conn']['hostname'] = array(
@@ -286,6 +288,16 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
     '#default_value' => $username,
     '#required'      => TRUE,
   );
+  
+  $ssh_key_location = $resource->getSSHKeyLocation();
+  $form['conn']['ssh_key_location'] = array(
+    '#title'        => t('SSH Key Location'),
+    '#type'         => 'textfield',
+    '#description'  => t("SSH Key File location (including the file itself)"),
+    '#field_suffix' => t("This key must already exist and be tied to the user who will be running the Tripal Job Daemon."),
+    '#default_value'=> $ssh_key_location,
+    '#required'     => TRUE,
+  );
 
   // Add functional buttons.
   if ($resource->getResourceID()) {
@@ -304,11 +316,14 @@ function tripal_remote_job_admin_resource_form($form, &$form_state, $resource_id
   }
   
   // Test Remote Configuration
+  /* Disable for now since we don't want to confuse the admin 
+   * Perhaps submit a Tripal Job to do the test, that way it gets run as whichever user
+   * launched trpjob-daemon
   $form['test_remote'] = array(
     '#type' => 'submit',
     '#name' => 'test_remote',
     '#value' => t('Test Remote Configuration (Optional)')
-  );
+  );*/
   
   $form['#prefix'] = '<div id="tripal-remote-job-admin-resource-form">';
   $form['#suffix'] = '</div>';
@@ -343,8 +358,10 @@ function tripal_remote_job_admin_resource_form_submit($form, &$form_state) {
       $connection_details = array();
       $connection_details['remote_working_directory']   = $form_state['values']['working_directory'];
       $connection_details['hostname']                   = $form_state['values']['conn']['hostname'];
-      $connection_details['ssh_port']                       = $form_state['values']['conn']['ssh_port'];
+      $connection_details['ssh_port']                   = $form_state['values']['conn']['ssh_port'];
       $connection_details['username']                   = $form_state['values']['conn']['username'];
+      $connection_details['ssh_key_location']           = $form_state['values']['conn']['ssh_key_location'];
+
       // Call the tripal_remote_job_check_configuration function
       /* Reminder of possible return values:
        * 0 - Connection successful, remote working directory exists and is writeable    [directory_exists_is_writable]
@@ -442,6 +459,7 @@ function tripal_remote_job_admin_resource_form_submit($form, &$form_state) {
     $hostname = trim($form_state['values']['conn']['hostname']);
     $ssh_port = trim($form_state['values']['conn']['ssh_port']);
     $username = trim($form_state['values']['conn']['username']);
+    $ssh_key_location = trim($form_state['values']['conn']['ssh_key_location']);
 
     // Updates TripalRemoteSSH.
     $remote_resource = TripalRemoteSSH::byID($resource_id);
@@ -449,6 +467,7 @@ function tripal_remote_job_admin_resource_form_submit($form, &$form_state) {
       $remote_resource->setHostname($hostname);
       $remote_resource->setSSHPort($ssh_port);
       $remote_resource->setUsername($username);
+      $remote_resource->setSSHKeyLocation($ssh_key_location);
       $remote_resource->update();
     }
     // Adds TripalRemoteSSH.
@@ -458,6 +477,7 @@ function tripal_remote_job_admin_resource_form_submit($form, &$form_state) {
         'hostname'    => $hostname,
         'ssh_port'    => $ssh_port,
         'username'    => $username,
+        'ssh_key_location'  => $ssh_key_location,
       ));
       $remote_resource->insert();
     }
