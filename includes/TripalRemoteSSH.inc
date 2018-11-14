@@ -7,6 +7,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
   protected $hostname;
   protected $ssh_port;
   protected $username;
+  protected $ssh_key_location;
 
   /**
    * Implements the class constructor.
@@ -18,6 +19,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
     $this->hostname = array_key_exists('hostname', $details)  ? $details['hostname']  : '';
     $this->ssh_port = array_key_exists('ssh_port', $details)  ? $details['ssh_port']  : 22;
     $this->username = array_key_exists('username', $details)  ? $details['username']  : '';
+    $this->ssh_key_location  = array_key_exists('ssh_key_location', $details)   ? $details['ssh_key_location']   : '~/.ssh/id_rsa';
 
     parent::__construct($details);
   }
@@ -49,6 +51,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
     $resource['hostname'] = $ssh_resource['hostname'];
     $resource['ssh_port'] = $ssh_resource['ssh_port'];
     $resource['username'] = $ssh_resource['username'];
+    $resource['ssh_key_location'] = $ssh_resource['ssh_key_location'];
 
     // Return the instance of this class.
     if ($resource) {
@@ -61,7 +64,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
 
   public function checkFiles($filesToCheck)
   {
-      $cmdA = "ssh -p $this->ssh_port $this->username@$this->hostname";
+      $cmdA = "ssh -p $this->ssh_port -i $this->$ssh_key_location $this->username@$this->hostname";
       $results = array();
       foreach ($filesToCheck as $files)
       {   
@@ -106,6 +109,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
           'hostname'    => $this->hostname,
           'ssh_port'    => $this->ssh_port,
           'username'    => $this->username,
+          'ssh_key_location'    => $this->ssh_key_location,
         ))
         ->execute();
     }
@@ -132,7 +136,8 @@ class TripalRemoteSSH extends TripalRemoteResource {
           'resource_id' => $this->resource_id,
           'hostname'    => $this->hostname,
           'ssh_port'    => $this->ssh_port,
-          'username'    => $this->username
+          'username'    => $this->username,
+          'ssh_key_location'   => $this->ssh_key_location,
         ))
         ->condition('resource_id', $this->resource_id, '=')
         ->execute();
@@ -192,21 +197,16 @@ class TripalRemoteSSH extends TripalRemoteResource {
       $hostname = $this->getHostname();
       $ssh_port = $this->getSSHPort();
       $username = $this->getUsername();
-      $ssh_key_dir = '~/.ssh';
+      $ssh_key_location = $this->getSSHKeyLocation();
       $ssh_key_dirOLD = variable_get('tripal_remote_job_ssh_key_dir', $_SERVER['HOME'] . ' /.ssh');
       
-      
-      
-      echo "\n\n\n";
-      echo "OLD key dir: ".$ssh_key_dirOLD;
-      echo "\n\n\n";
       //Get the remote PID of the job
       $job_id = $job->getJobID();
       echo "this job's ID: ". $job_id;
       echo "\n";
       
       //Assemble the command to get the PID (may change depending on environment)
-      $ssh_conn = "ssh -p $ssh_port -i $ssh_key_dir/id_rsa $username" . '@' . $hostname;
+      $ssh_conn = "ssh -p $ssh_port -i $ssh_key_location $username" . '@' . $hostname;
       
       $remote_job_dir = $this->getJobWorkingDir($job);
       
@@ -291,9 +291,8 @@ class TripalRemoteSSH extends TripalRemoteResource {
     $hostname = $this->getHostname();
     $ssh_port = $this->getSSHPort();
     $username = $this->getUsername();
-    //$ssh_key_dir = variable_get('tripal_remote_job_ssh_key_dir', $_SERVER['HOME'] . '/.ssh');
-    $ssh_key_dir = '~/.ssh';
-    $ssh_conn = "ssh -p $ssh_port -i $ssh_key_dir/id_rsa $username" . '@' . $hostname;
+    $ssh_key_location = $this->getSSHKeyLocation();
+    $ssh_conn = "ssh -p $ssh_port -i $ssh_key_location $username" . '@' . $hostname;
     $remote_job_dir = $this->getJobWorkingDir($job);
 
     // Command to delete the job diretory.
@@ -314,9 +313,8 @@ class TripalRemoteSSH extends TripalRemoteResource {
     $hostname = $this->getHostname();
     $ssh_port = $this->getSSHPort();
     $username = $this->getUsername();
-    //$ssh_key_dir = variable_get('tripal_remote_job_ssh_key_dir', $_SERVER['HOME'] . '/.ssh');
-    $ssh_key_dir = '~/.ssh';
-    $ssh_conn = "ssh -p $ssh_port -i $ssh_key_dir/id_rsa $username" . '@' . $hostname;
+    $ssh_key_location = $this->getSSHKeyLocation();
+    $ssh_conn = "ssh -p $ssh_port -i $ssh_key_location $username" . '@' . $hostname;
     $remote_job_dir = self::getJobWorkingDir($job);
 
     // Command to create the job diretory.
@@ -338,9 +336,8 @@ class TripalRemoteSSH extends TripalRemoteResource {
     $hostname = $this->getHostname();
     $ssh_port = $this->getSSHPort();
     $username = $this->getUsername();
-    //$ssh_key_dir = variable_get('tripal_remote_job_ssh_key_dir', $_SERVER['HOME'] . '/.ssh');
-    $ssh_key_dir = '~/.ssh';
-    $ssh_conn = "ssh -p $ssh_port -i $ssh_key_dir/id_rsa $username" . '@' . $hostname;
+    $ssh_key_location = $this->getSSHKeyLocation();
+    $ssh_conn = "ssh -p $ssh_port -i $ssh_key_location $username" . '@' . $hostname;
     $remote_job_dir = $this->getJobWorkingDir($job);
     $script_file = self::getJobRunScript($job);
     //$cmd = "$ssh_conn \"cd " . self::getJobWorkingDir($job) . "; sh $script_file > STDOUT.txt 2> STDERR.txt &\"";
@@ -375,8 +372,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
     $hostname = $this->getHostname();
     $ssh_port = $this->getSSHPort();
     $username = $this->getUsername();
-    //$ssh_key_dir = variable_get('tripal_remote_job_ssh_key_dir', $_SERVER['HOME'] . '/.ssh');
-    $ssh_key_dir = '~/.ssh';
+    $ssh_key_location = $this->getSSHKeyLocation();
     $conn_str = $username . '@' . $hostname . ':';
     $remote_job_dir = $this->getJobWorkingDir($job);
     $rsync = variable_get('tripal_remote_job_rsync_binary', '/usr/bin/rsync');
@@ -387,7 +383,7 @@ class TripalRemoteSSH extends TripalRemoteResource {
       $job->logMessage("Sending file '$filepath'...");
       $output = array();
       $return_var = '';
-      $cmd = "$rsync -rtz -e 'ssh -p $ssh_port -i $ssh_key_dir/id_rsa' --exclude 'run.lock' $filepath $conn_str$remote_job_dir";
+      $cmd = "$rsync -rtz -e 'ssh -p $ssh_port -i $ssh_key_location' --exclude 'run.lock' $filepath $conn_str$remote_job_dir";
       $job->logMessage('Send Command: ' . $cmd);
       exec($cmd, $output, $return_var);
     }
@@ -404,15 +400,14 @@ class TripalRemoteSSH extends TripalRemoteResource {
     $hostname = $resource->getHostname();
     $ssh_port = $resource->getSSHPort();
     $username = $resource->getUsername();
-    //$ssh_key_dir = variable_get('tripal_remote_job_ssh_key_dir', $_SERVER['HOME'] . '/.ssh');
-    $ssh_key_dir = '~/.ssh';
+    $ssh_key_location = $this->getSSHKeyLocation();
     $conn_str = $username . '@' . $hostname . ':';
     $remote_job_dir = $this->getJobWorkingDir($job);
     $local_working_dir = $this->getResultsDir();
     $rsync = variable_get('tripal_remote_job_rsync_binary', '/usr/bin/rsync');
 
     // Perform rsync only if the remote directory exists.
-    $cmd = "$rsync -rtz -e 'ssh -p $ssh_port -i $ssh_key_dir/id_rsa' $conn_str$remote_job_dir $local_working_dir";
+    $cmd = "$rsync -rtz -e 'ssh -p $ssh_port -i $ssh_key_location' $conn_str$remote_job_dir $local_working_dir";
     $job->logMessage('Pull Command: ' . $cmd);
     $output = array();
     $return_var = '';
@@ -471,6 +466,22 @@ class TripalRemoteSSH extends TripalRemoteResource {
    */
   public function setUsername($username) {
     $this->username = $username;
+  }
+  
+   /**
+   * Retrieves the SSH Key location.
+   * 
+   * @return string
+   */
+  public function getSSHKeyLocation() {
+    return $this->ssh_key_location;
+  }
+  
+  /**
+   * Updates the SSH Key location
+   */
+  public function setSSHKeyLocation($ssh_key_location) {
+    $this->$ssh_key_location = $ssh_key_location;
   }
 
 }
