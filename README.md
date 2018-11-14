@@ -20,9 +20,10 @@ Ported from GenSAS to work with Tripal
   - [ ] API argument to specify target destination for job if multiple (make some logic to dynamically assign?)
   
 ## Requirements
-Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1])
-libraries module
-drushd module
+- Tripal 3 (Tested with Tripal 3 [7.x-3.0-rc1])
+- libraries module
+- php-daemon library
+- drushd module
 
 ## Installation
 1. Install module in same way as any other module
