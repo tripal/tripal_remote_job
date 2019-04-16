@@ -31,7 +31,7 @@
 function tripal_add_remote_job($job_name, $command, $origin_module, $files = array(), $send_email = FALSE){
   global $user;
   
-  $arguments = array($command." & echo $! > PID", $files, $send_email);
+  $arguments = array($command, $files, $send_email);
   
   if ($origin_module)
   {
