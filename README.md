@@ -78,10 +78,12 @@ Refer to this section when configuring your remote resources
 ## Mail Functionality
 When creating a job, Tripal Remote Job is aware of what module (origin module) has spawned the job (via the API call).
 It will then query that module to see if there are any specific mail functionality required for notifying the user in two conditions:
-    -Job is launched
-    -Job has completed
+  - Job is launched
+  - Job has completed
+  
 These require that the module's hook_mail function has provisions for the following keys:
-    `job-started`
-    `job-completed`
+  - `job-started`
+  - `job-completed`
+
 If these keys exist, the module's hook_mail function will be used. Else, Tripal Remote Job will send a generic email about job status. This functionality gives the origin module the ability to specify a template for the emails to be sent when a job starts or finishes.
-**Modules that use Tripal Remote job are not required to provide custom mail functionality**
+Modules that use Tripal Remote job are not required to provide custom mail functionality
